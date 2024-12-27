@@ -1,7 +1,8 @@
-<script setup></script>
+<script setup>
+import Template from '@/components/Template.vue';
+import Welcome from '@/components/Welcome.vue';
+</script>
 
 <template>
-	<main>
-		<h1>Main - Home Page</h1>
-	</main>
+	<Welcome />
 </template>
