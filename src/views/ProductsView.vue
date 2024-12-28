@@ -1,8 +1,9 @@
 <script setup>
 import axios from 'axios';
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 const products = ref([]); // Reactive variable to store products
+const cart = ref([]);
 const isLoading = ref(true); // Reactive variable to track loading state
 const error = ref(null); // Reactive variable to track errors
 
@@ -28,10 +29,82 @@ const getProducts = async () => {
 
 // Fetch products when the component is mounted
 onMounted(getProducts);
+
+const addToCart = (product) => {
+	const existingItem = cart.value.find((item) => item.id === product.id);
+	console.log(existingItem);
+
+	// Add product to cart
+	if (existingItem) {
+		existingItem.quantity++;
+		existingItem.totalPrice =
+			(existingItem.price || 0) * (existingItem.quantity || 1);
+		console.log(existingItem);
+	} else {
+		console.log('else - block');
+
+		cart.value.push({
+			...product,
+			quantity: 1, // Default quantity
+			totalPrice: (product.price || 0) * (product.quantity || 1), // Guard Against Undefined Values
+		});
+		// console.log((product.price || 0) * (product.quantity || 1));
+	}
+};
+
+// Method to update total price when quantity increases
+const increaseQuantity = (position) => {
+	const cartItem = cart.value[position];
+	console.log(cartItem);
+
+	cartItem.quantity += 1;
+	cartItem.totalPrice = cartItem.price * cartItem.quantity;
+};
+
+// Computed property for calculating grand total
+const grandTotal = computed(() => {
+	return cart.value.reduce((acc, product) => acc + (product.price || 0), 0);
+});
 </script>
 
 <template>
 	<section class="section">
+		<div class="mt-4">
+			<h2 class="text-2xl font-semibold text-gray-800 mb-6 border-b pb-2">
+				{{ cart.length === 0 ? 'Your Cart is Empty' : 'Cart Summary' }}
+			</h2>
+			<ul class="divide-y divide-gray-300">
+				<li
+					v-for="(cartItem, index) in cart"
+					:key="index"
+					class="flex justify-between items-center py-3"
+				>
+					<div class="text-gray-800 font-medium">
+						{{ cartItem.title }}
+						<span class="text-sm text-gray-500 block"
+							>Price: ${{ cartItem.price }}</span
+						>
+					</div>
+					<div class="flex items-center">
+						<span class="text-gray-600 mr-3">
+							{{ cartItem.quantity }} X ${{ cartItem.price }}
+						</span>
+						<span class="text-gray-800 font-bold"
+							>${{ cartItem.totalPrice }}</span
+						>
+					</div>
+				</li>
+			</ul>
+			<!-- Grand Total Section -->
+			<div
+				class="flex justify-between items-center mt-4 border-t border-gray-300"
+			>
+				<span class="text-lg font-semibold text-gray-800">Grand Total:</span>
+				<span class="text-lg font-bold text-green-600"
+					>${{ grandTotal.toFixed(2) }}</span
+				>
+			</div>
+		</div>
 		<div class="flex flex-col items-center space-y-4">
 			<!-- Loading State -->
 			<div
@@ -67,7 +140,7 @@ onMounted(getProducts);
 					<!-- Move the add to cart button group bottom of the card fix - flex flex-col and mt-auto in button group  -->
 					<div
 						class="card py-4 flex flex-col"
-						v-for="product in products"
+						v-for="(product, index) in products"
 						:key="product.id"
 					>
 						<!-- Product Image -->
@@ -119,10 +192,12 @@ onMounted(getProducts);
 						<!-- Button Group at the Bottom -->
 						<!-- Move the add to cart button group bottom of the card fix - mt-auto in button group  -->
 						<div class="mt-auto flex gap-4 p-4">
-							<button @click="incrementAsync" class="flex-1 btn-primary">
+							<button @click="addToCart(product)" class="flex-1 btn-primary">
 								Add to cart
 							</button>
-							<button @click="inc" class="btn-secondary">+</button>
+							<button @click="increaseQuantity(index)" class="btn-secondary">
+								+
+							</button>
 							<button @click="dec" class="btn-secondary">-</button>
 						</div>
 					</div>
