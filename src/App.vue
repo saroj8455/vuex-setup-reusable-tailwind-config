@@ -2,6 +2,7 @@
 import axios from 'axios';
 import { onMounted, ref, watch } from 'vue';
 import { RouterView } from 'vue-router';
+import apiClient from './axios';
 
 const post = ref(null);
 const isLoading = ref(false); // Track loading state
@@ -11,9 +12,7 @@ const postId = ref(1);
 const getPost = async () => {
 	isLoading.value = true; // Start loading
 	try {
-		const response = await axios.get(
-			`https://dummyjson.com/posts/${postId.value}`
-		);
+		const response = await apiClient.get(`posts/${postId.value}`);
 		post.value = response.data; // Assign fetched data to `post`
 	} catch (error) {
 		err.value = 'Failed to fetch post data. Please try again later.';
@@ -33,7 +32,7 @@ watch(postId, () => {
 
 const generateRandom = () => {
 	// console.log(Math.floor(Math.random() * 10) + 1);
-	postId.value = Math.floor(Math.random() * 5000) + 1;
+	postId.value = Math.floor(Math.random() * 100) + 1;
 };
 </script>
 
