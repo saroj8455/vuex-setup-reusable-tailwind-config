@@ -7,6 +7,7 @@ const cart = ref([]);
 const isLoading = ref(true); // Reactive variable to track loading state
 const error = ref(null); // Reactive variable to track errors
 
+// Fetch Products from API
 const getProducts = async () => {
 	try {
 		const response = await axios.get('https://dummyjson.com/products');
@@ -19,8 +20,10 @@ const getProducts = async () => {
 		// Assign fetched products to the reactive variable
 		products.value = response?.data.products;
 	} catch (error) {
-		// Capture any error
-		error.value = error.message;
+		console.log(error);
+		// Set error message to the reactive variable
+		// Set error message
+		error.value = error.message || 'An error occurred while fetching products.';
 	} finally {
 		// Set loading state to false
 		isLoading.value = false;
@@ -32,17 +35,13 @@ onMounted(getProducts);
 
 const addToCart = (product) => {
 	const existingItem = cart.value.find((item) => item.id === product.id);
-	console.log(existingItem);
 
 	// Add product to cart
 	if (existingItem) {
 		existingItem.quantity++;
 		existingItem.totalPrice =
 			(existingItem.price || 0) * (existingItem.quantity || 1);
-		console.log(existingItem);
 	} else {
-		console.log('else - block');
-
 		cart.value.push({
 			...product,
 			quantity: 1, // Default quantity
@@ -55,10 +54,20 @@ const addToCart = (product) => {
 // Method to update total price when quantity increases
 const increaseQuantity = (position) => {
 	const cartItem = cart.value[position];
-	console.log(cartItem);
-
-	cartItem.quantity += 1;
-	cartItem.totalPrice = cartItem.price * cartItem.quantity;
+	if (cartItem) {
+		cartItem.quantity += 1;
+		cartItem.totalPrice = cartItem.price * cartItem.quantity;
+	}
+	console.log('nothing');
+};
+// Method to update total price when quantity decreases
+const decreaseQuantity = (position) => {
+	const cartItem = cart.value[position];
+	if (cartItem && cartItem.quantity > 1) {
+		cartItem.quantity -= 1;
+		cartItem.totalPrice = cartItem.price * cartItem.quantity; // Update totalPrice
+	}
+	console.log('nothing');
 };
 
 // Computed property for calculating grand total
@@ -107,35 +116,17 @@ const grandTotal = computed(() => {
 		</div>
 		<div class="flex flex-col items-center space-y-4">
 			<!-- Loading State -->
-			<div
-				:class="{
-					block: isLoading,
-					hidden: !isLoading,
-				}"
-				class="text-blue-500 text-lg font-medium"
-			>
+			<div v-if="isLoading" class="text-blue-500 text-lg font-medium mt-4">
 				Loading products...
 			</div>
 
 			<!-- Error State -->
-			<div
-				:class="{
-					block: error && !isLoading,
-					hidden: !error || isLoading,
-				}"
-				class="text-red-500 text-lg font-medium"
-			>
+			<div v-else-if="error" class="text-red-500 text-lg font-medium mt-4">
 				{{ error }}
 			</div>
 
 			<!-- Products List -->
-			<div
-				:class="{
-					block: !isLoading && !error,
-					hidden: isLoading || error,
-				}"
-				class="w-full"
-			>
+			<div class="w-full">
 				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 					<!-- Move the add to cart button group bottom of the card fix - flex flex-col and mt-auto in button group  -->
 					<div
@@ -191,14 +182,17 @@ const grandTotal = computed(() => {
 
 						<!-- Button Group at the Bottom -->
 						<!-- Move the add to cart button group bottom of the card fix - mt-auto in button group  -->
-						<div class="mt-auto flex gap-4 p-4">
+						<div class="mt-auto flex items-center gap-4 p-4">
 							<button @click="addToCart(product)" class="flex-1 btn-primary">
-								Add to cart
+								cart
 							</button>
 							<button @click="increaseQuantity(index)" class="btn-secondary">
 								+
 							</button>
-							<button @click="dec" class="btn-secondary">-</button>
+							<span class="text-gray-800">{{ product.quantity }}</span>
+							<button @click="decreaseQuantity(index)" class="btn-secondary">
+								-
+							</button>
 						</div>
 					</div>
 				</div>
