@@ -12,6 +12,9 @@
 }
 
 /* card  */
+.primary-card {
+	@apply bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden md:w-full;
+}
 .card {
 	@apply max-w-sm mx-auto bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden;
 }
